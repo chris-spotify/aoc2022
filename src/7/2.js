@@ -61,5 +61,4 @@ buildFS();
 appendSize(filesystem.dirs['/']);
 let freeSpace = 70000000 - filesystem.dirs['/'].size;
 let needed = 30000000 - freeSpace;
-let min = Infinity;
-console.log(buildSolution(filesystem.dirs['/'], min, needed));
+console.log(buildSolution(filesystem.dirs['/'], Infinity, needed));
