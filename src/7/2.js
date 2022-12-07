@@ -49,10 +49,10 @@ const appendSize = (dir) => {
     }
 };
 
-const buildSolution = (results, dir, best, needed) => {
+const buildSolution = (dir, best, needed) => {
     if (dir.size > needed && dir.size < best) best = dir.size;
     for (const nextDir of Object.values(dir.dirs)){
-        best = Math.min(best, buildSolution(results, nextDir, best, needed));
+        best = Math.min(best, buildSolution(nextDir, best, needed));
     }
     return best;
 }
@@ -61,6 +61,5 @@ buildFS();
 appendSize(filesystem.dirs['/']);
 let freeSpace = 70000000 - filesystem.dirs['/'].size;
 let needed = 30000000 - freeSpace;
-let results = [];
 let min = Infinity;
-console.log(buildSolution(results, filesystem.dirs['/'], min, needed));
+console.log(buildSolution(filesystem.dirs['/'], min, needed));
