@@ -9,12 +9,11 @@ const cols = [];
 
 // build rows/cols
 for (let i = 0; i < input.length; i++){
-    if (!rows[i]) rows[i] = [];
+    rows[i] = input[i];
     for (let j = 0; j < input[i].length; j++){
         if (!cols[j]) cols[j] = [];
         const tree = input[i][j];
         cols[j].push(tree);
-        rows[i].push(tree);
     }
 }
 
