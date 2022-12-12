@@ -14,7 +14,6 @@ for (let i=0;i<input.length;i++){
             endX = i;
             endY = j;
         }
-        if (typeof startX !== 'undefined' && typeof endX !== 'undefined') break;
     }
 }
 
