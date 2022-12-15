@@ -34,6 +34,7 @@ const drawMap = () => {
     for (const line of lines) console.log(line);
 };
 
+// uncomment for full map draw (test input only)
 // for (const pair of input) {
 //     const sensor = pair[0];
 //     const beacon = pair[1];
@@ -88,7 +89,4 @@ for (const [coords, dist] of Object.entries(sensors)) {
 
 
 console.log(Object.keys(cannotContain).length);
-// console.log(Object.entries(map).filter(([coord, value]) => coord.split(',')[1] === '10' && value === '#').map(([coord, value]) => coord).length);
-
 // drawMap();
-// console.log(Object.entries(map).filter(([coord, value]) => (coord.split(',')[1] === '2000000' && value === '#')).length);

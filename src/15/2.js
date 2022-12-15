@@ -34,25 +34,21 @@ const drawMap = () => {
     for (const line of lines) console.log(line);
 };
 
-// for (const pair of input) {
-//     const sensor = pair[0];
-//     const beacon = pair[1];
-//     map[`${sensor[0]},${sensor[1]}`] = 'S';
-//     map[`${beacon[0]},${beacon[1]}`] = 'B';
-//     const distance = getDist(...sensor, ...beacon);
-//     for (let i = 0; i <= distance; i++) {
-//         const y1 = sensor[1] - i;
-//         const y2 = sensor[1] + i;
-//         for (let j = distance - i; j >= 0; j--) {
-//             const x1 = sensor[0] - j;
-//             const x2 = sensor[0] + j;
-//             if (!map[`${x1},${y1}`]) map[`${x1},${y1}`] = '#';
-//             if (!map[`${x2},${y2}`]) map[`${x2},${y2}`] = '#';
-//             if (!map[`${x1},${y2}`]) map[`${x1},${y2}`] = '#';
-//             if (!map[`${x2},${y1}`]) map[`${x2},${y1}`] = '#';
-//         }
-//     }
-// }
+const validDistanceToSensors = (x, y) => {
+    for (const [coord, dist] of Object.entries(sensors)) {
+        const [x2, y2] = coord.split(',').map(c => parseInt(c, 10));
+        if (getDist(x, y, x2, y2) <= dist) return false;
+    }
+    return true;
+};
+
+const validPoint = (x,y,bound) => {
+    return (x >= 0 && x <= bound && y >= 0 && y <= bound);
+};
+
+const solution = (x,y) => {
+    console.log(`Possible solution found at ${x},${y}: ${(x * 4000000) + y}`);
+};
 
 for (const pair of input) {
     const sensor = pair[0];
@@ -63,101 +59,24 @@ for (const pair of input) {
     sensors[`${sensor[0]},${sensor[1]}`] = distance;
 }
 
-const validDistanceToSensor = (x, y) => {
-    let count = 0;
-    for (const [coord, dist] of Object.entries(sensors)) {
-        const [x2, y2] = coord.split(',').map(c => parseInt(c, 10));
-        if (getDist(x, y, x2, y2) === dist + 1) count++;
-    }
-    return count;
-};
-
-const findBeacon = () => {
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    for (const coord of Object.keys(sensors)) {
-        const c = coord.split(',').map(c => parseInt(c, 10));
-        if (c[0] < minX) minX = c[0];
-        if (c[0] > maxX) maxX = c[0];
-        if (c[1] < minY) minY = c[1];
-        if (c[1] > maxY) maxY = c[1];
-    }
-    for (let x = 0; x <= maxX; x++) {
-        for (let y = 0; y <= maxY; y++) {
-            if (validDistanceToSensor(x, y)) return [x, y];
-        }
-    }
-}
-
-// console.log(findBeacon());
-
-const findX2 = (distance, x1, y1, y2) => {
-    return (distance - Math.abs(y1 - y2)) + x1;
-}
-
-let perimeters = {};
 let sensorCount = 1;
-for (const [coords, dist] of Object.entries(sensors)) {
+for (const [coords, distance] of Object.entries(sensors)) {
     console.log(`sensor ${sensorCount} of ${input.length}`);
     const c = coords.split(',').map(c => parseInt(c, 10));
-    if (c[0] < 0 && c[0] + dist < 0) continue;
-    if (c[0] > 4000000 && c[0] - dist > 4000000) continue;
-    if (c[1] < 0 && c[1] + dist < 0) continue;
-    if (c[1] > 4000000 && c[1] - dist > 4000000) continue;
+    const dist = distance + 1; // we want the edge 1 outside our perimeter
+    console.log(`perimeter for distance of ${dist} at ${c[0]},${c[1]}`);
     for (yOffset = 0; yOffset <= dist; yOffset++) {
-        const x1 = findX2(dist, ...c, c[1] - yOffset);
+        const x1 = c[0] - (dist - yOffset);
         const x2 = c[0] + (c[0] - x1);
         const y1 = c[1] - yOffset;
         const y2 = c[1] + yOffset;
-        perimeters[`${x1},${y1}`] = 1;
-        perimeters[`${x1},${y2}`] = 1;
-        perimeters[`${x2},${y1}`] = 1;
-        perimeters[`${x2},${y2}`] = 1;
+        // points to check
+        if (validPoint(x1,y1,4000000) && validDistanceToSensors(x1,y1)) console.log(solution(x1,y1));
+        if (validPoint(x1,y2,4000000) && validDistanceToSensors(x1,y2)) console.log(solution(x1,y2));
+        if (validPoint(x2,y1,4000000) && validDistanceToSensors(x2,y1)) console.log(solution(x2,y1));
+        if (validPoint(x2,y2,4000000) && validDistanceToSensors(x2,y2)) console.log(solution(x2,y2));
     }
     sensorCount++;
 }
 
-const possible = [];
-for (const point of Object.keys(perimeters)) {
-    const [x, y] = point.split(',');
-    if (x < 0 || x > 4000000 || y < 0 || y > 4000000) continue;
-    // up?
-    if (!perimeters[`${x},${y - 1}`] &&
-        perimeters[`${x},${y - 2}`] &&
-        perimeters[`${x + 1},${y - 1}`] &&
-        perimeters[`${x - 1},${y - 1}`]) {
-        possible.push([x, y]);
-    }
-    // down?
-    if (!perimeters[`${x},${y + 1}`] &&
-        perimeters[`${x},${y + 2}`] &&
-        perimeters[`${x + 1},${y + 1}`] &&
-        perimeters[`${x - 1},${y + 1}`]) {
-        possible.push([x, y]);
-    }
-    // right?
-    if (!perimeters[`${x + 1},${y}`] &&
-        perimeters[`${x + 2},${y}`] &&
-        perimeters[`${x + 1},${y - 1}`] &&
-        perimeters[`${x + 1},${y + 1}`]) {
-        possible.push([x, y]);
-    }
-    // left?
-    if (!perimeters[`${x - 1},${y}`] &&
-        perimeters[`${x - 2},${y}`] &&
-        perimeters[`${x - 1},${y - 1}`] &&
-        perimeters[`${x - 1},${y + 1}`]) {
-        possible.push([x, y]);
-    }
-}
-
-console.log(possible);
-
-
-// console.log(Object.keys(cannotContain).length);
-// console.log(Object.entries(map).filter(([coord, value]) => coord.split(',')[1] === '10' && value === '#').map(([coord, value]) => coord).length);
 // drawMap();
-
-// console.log(Object.entries(map).filter(([coord, value]) => (coord.split(',')[1] === '2000000' && value === '#')).length);
