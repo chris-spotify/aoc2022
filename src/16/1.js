@@ -9,69 +9,74 @@ for (const valve of Object.keys(input)){
 
 const distances = {};
 
-// compute min distance from each point to all other points (BFS)
-for (const [valve, attr] of Object.entries(input)){
-    const stack = [
-        {
-            valve,
-            attr,
-            dist: 0,
-        }
-    ];
-    distances[valve] = {...allKeys};
-    delete distances[valve][valve]; // don't need to track to ourselves
-    seen = {};
-    while (stack.length){
-        const cur = stack.pop();
-        if (cur.valve !== valve){
-            if (cur.dist < distances[valve][cur.valve]) distances[valve][cur.valve] = cur.dist;
-        }
-        for (const next of cur.attr.tunnels){
-            if (!seen[next]){
-                seen[next] = 1;
-                stack.push({
-                    valve: next,
-                    attr: input[next],
-                    dist: cur.dist + 1
-                });
+const getDistances = () => {
+    // compute min distance from each point to all other points (BFS)
+    for (const [valve, attr] of Object.entries(input)){
+        const stack = [
+            {
+                valve,
+                attr,
+                dist: 0,
+            }
+        ];
+        distances[valve] = {...allKeys};
+        delete distances[valve][valve]; // don't need to track to ourselves
+        seen = {};
+        while (stack.length){
+            const cur = stack.shift();
+            if (cur.valve !== valve){
+                if (cur.dist < distances[valve][cur.valve]) distances[valve][cur.valve] = cur.dist;
+            }
+            for (const next of cur.attr.tunnels){
+                if (!seen[next]){
+                    seen[next] = 1;
+                    stack.push({
+                        valve: next,
+                        attr: input[next],
+                        dist: cur.dist + 1
+                    });
+                }
             }
         }
     }
 }
 
-console.log(distances);
+const findMaxPressure = () => {
+    // maximize rate by trying all possible destinations from each valve
+    let best = 0;
+    const stack = [
+        {
+            current: 'AA',
+            seen: {},
+            rate: 0,
+            time: 30,
+        },
+    ];
 
-// maximize rate by trying all possible destinations from each valve
-let best = 0;
-const stack = [
-    {
-        current: 'AA',
-        seen: {},
-        rate: 0,
-        time: 30,
-    },
-];
-
-while (stack.length) {
-    const cur = stack.pop();
-    let foundNext = false;
-    for (const tunnel of Object.keys(distances[cur.current]).filter(d => input[d].rate > 0)){
-        if (!cur.seen[tunnel] && cur.time - distances[cur.current][tunnel] - 1 >= 0){
-            foundNext = true;
-            const seenClone = {...cur.seen};
-            seenClone[tunnel] = 1;
-            const newTime = cur.time - distances[cur.current][tunnel] - 1;
-            stack.push({
-                current: tunnel,
-                seen: seenClone,
-                rate: cur.rate + (input[tunnel].rate * newTime),
-                time: newTime,
-            });
+    while (stack.length) {
+        const cur = stack.pop();
+        let foundNext = false;
+        for (const tunnel of Object.keys(distances[cur.current]).filter(d =>
+            input[d].rate > 0 && // don't travel to 0 rate nodes
+            !cur.seen[d] && // don't travel to any nodes we've visited
+            cur.time - distances[cur.current][d] - 1 > 0)){ // do we have enough time to visit this node and have it add to our released rate?
+                foundNext = true;
+                const seenClone = {...cur.seen, [tunnel]: 1};
+                const newTime = cur.time - distances[cur.current][tunnel] - 1;
+                stack.push({
+                    current: tunnel,
+                    seen: seenClone,
+                    rate: cur.rate + (input[tunnel].rate * newTime),
+                    time: newTime,
+                });
+        }
+        if (!foundNext){
+            if (cur.rate > best) best = cur.rate;
         }
     }
-    if (!foundNext){
-        if (cur.rate > best) best = cur.rate;
-    }
+
+    return best;
 }
 
-console.log(best);
+getDistances();
+console.log(findMaxPressure());
