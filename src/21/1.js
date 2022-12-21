@@ -37,7 +37,7 @@ while (stack.length){
         stack.push(row);
         continue;
     }
-    seen[key] = eval(`${seen[value[0]]}${value[1]}${seen[value[2]]}`); // plz don't kill my PC with your input malwarez
+    seen[key] = eval(`${seen[value[0]]} ${value[1]} ${seen[value[2]]}`); // plz don't kill my PC with your input malwarez
 }
 
 console.log(seen['root']);
