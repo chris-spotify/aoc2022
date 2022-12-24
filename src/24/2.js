@@ -33,11 +33,13 @@ const buildMap = () => {
 
 const eligibleMoves = (state) => {
     const { x, y, map } = state;
+    let topX = (goalY === 0) ? goalX : startX;
+    let bottomX = (goalY === 0) ? startX : goalX;
     const eligible = [];
     if (x > 1 && !map[`${x - 1},${y}`]) eligible.push([x - 1, y, 'left']);
     if (x < input[0].length - 2 && !map[`${x + 1},${y}`]) eligible.push([x + 1, y, 'right']);
-    if ((y > 1 || (y === 1 && x === startX)) && !map[`${x},${y - 1}`]) eligible.push([x, y - 1, 'up']);
-    if ((y < input.length - 2 || (y === input.length - 2 && x === goalX)) && !map[`${x},${y + 1}`]) eligible.push([x, y + 1, 'down']);
+    if ((y > 1 || (y === 1 && x === topX)) && !map[`${x},${y - 1}`]) eligible.push([x, y - 1, 'up']);
+    if ((y < input.length - 2 || (y === input.length - 2 && x === bottomX)) && !map[`${x},${y + 1}`]) eligible.push([x, y + 1, 'down']);
     return eligible;
 };
 
@@ -136,27 +138,33 @@ const makeHash = (state) => {
     return hash;
 };
 
-const leastMoves = (map, blizzards) => {
+const swapGoals = () => {
+    const tempStartX = startX;
+    const tempStartY = startY;
+    startX = goalX;
+    startY = goalY;
+    goalX = tempStartX;
+    goalY = tempStartY;
+};
+
+const leastMoves = (startState) => {
     const stack = [
-        {
-            x: startX,
-            y: startY,
-            moves: 0,
-            map: { ...map },
-            blizzards: [...blizzards],
-            history: [],
-        }
+        startState
     ];
     const seen = {};
     let bestMinutes = Infinity;
+    let bestBlizzards = [];
+    let bestMap = {};
 
     while (stack.length) {
-        // console.log(stack.length);
+        // if (stack.length % 100 === 0) console.log(stack.length);
         const state = stack.shift();
         if (state.y === goalY && state.moves < bestMinutes) {
             drawMap(state);
             console.log(JSON.stringify(state.history));
             bestMinutes = state.moves;
+            bestBlizzards = [...state.blizzards];
+            bestMap = {...state.map};
             continue;
         }
         if (state.moves > bestMinutes) continue;
@@ -181,8 +189,42 @@ const leastMoves = (map, blizzards) => {
             seen[hash] = 1;
         }
     }
-    return bestMinutes;
+    return {
+        bestMinutes,
+        bestBlizzards,
+        bestMap,
+    };
 };
 
 const { map: m, blizzards: b } = buildMap();
-console.log(leastMoves(m, b));
+const firstPass = leastMoves({
+    x: startX,
+    y: startY,
+    moves: 0,
+    map: { ...m },
+    blizzards: [...b],
+    history: [],
+});
+console.log(firstPass.bestMinutes);
+swapGoals();
+const secondPass = leastMoves({
+    x: startX,
+    y: startY,
+    moves: 0,
+    map: {...firstPass.bestMap},
+    blizzards: [...firstPass.bestBlizzards],
+    history: [],
+});
+console.log(secondPass.bestMinutes);
+swapGoals();
+const thirdPass = leastMoves({
+    x: startX,
+    y: startY,
+    moves: 0,
+    map: {...secondPass.bestMap},
+    blizzards: [...secondPass.bestBlizzards],
+    history: [],
+});
+console.log(thirdPass.bestMinutes);
+
+// 332 + 298 + 312
